@@ -19,21 +19,22 @@ class EmailNotifier:
         self.password = EMAIL_PASSWORD
         self.recipient = EMAIL_RECIPIENT
 
-    def send_email(self, subject: str, body: str):
+    def send_email(self, subject, body, html=False):
         try:
             msg = EmailMessage()
             msg["Subject"] = subject
             msg["From"] = self.sender
             msg["To"] = self.recipient
-            msg.set_content(body)
 
-            server = smtplib.SMTP(self.smtp_server, self.port)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(self.sender, self.password)
-            server.send_message(msg)
-            server.quit()
+            if html:
+                msg.add_alternative(body, subtype='html')
+            else:
+                msg.set_content(body)
+
+            with smtplib.SMTP(self.smtp_server, self.port) as server:
+                server.starttls()
+                server.login(self.sender, self.password)
+                server.send_message(msg)
 
             logging.info("[EmailNotifier] Email sent.")
         except Exception as e:
